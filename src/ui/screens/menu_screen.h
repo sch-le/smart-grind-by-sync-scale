@@ -77,7 +77,10 @@ private:
     lv_obj_t* scale_weight_label;
     lv_obj_t* grind_size_label;
     lv_obj_t* scale_tare_button;
-    lv_obj_t* grind_size_up_button;
+    lv_obj_t* grind_size_up_1_button;
+    lv_obj_t* grind_size_up_10_button;
+    lv_obj_t* grind_size_down_1_button;
+    lv_obj_t* grind_size_down_10_button;
 
     // Diagnostics tab elements
     lv_obj_t* diag_status_label;

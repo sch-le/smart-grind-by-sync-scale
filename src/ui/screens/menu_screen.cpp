@@ -47,7 +47,10 @@ void MenuScreen::create(BluetoothManager* bluetooth, GrindController* grind_ctrl
     grinder_purge_amount_label = nullptr;
     grind_freshness_hours_slider = nullptr;
     grind_freshness_hours_label = nullptr;
-    grind_size_up_button = nullptr;
+    grind_size_up_1_button = nullptr;
+    grind_size_up_10_button = nullptr;
+    grind_size_down_1_button = nullptr;
+    grind_size_down_10_button = nullptr;
     lv_obj_add_flag(screen, LV_OBJ_FLAG_HIDDEN);
 
     // Create menu UI immediately at boot for instant access
@@ -498,12 +501,18 @@ void MenuScreen::create_grind_size_page(lv_obj_t* parent) {
     lv_obj_set_style_text_color(grind_size_label, lv_color_hex(THEME_COLOR_TEXT_PRIMARY), 0);
     lv_obj_set_style_text_align(grind_size_label, LV_TEXT_ALIGN_CENTER, 0);
 
-    grind_size_up_button = create_button(parent, "+1");
-    lv_obj_set_style_margin_top(grind_size_up_button, 10, 0);
+    grind_size_up_1_button = create_button(parent, "+1");
+    lv_obj_set_style_margin_top(grind_size_up_1_button, 10, 0);
     
-    grind_size_up_button = create_button(parent, "+10");
-    lv_obj_set_style_margin_top(grind_size_up_button, 10, 0);
-    
+    grind_size_up_10_button = create_button(parent, "+10");
+    lv_obj_set_style_margin_top(grind_size_up_10_button, 10, 0);
+
+    grind_size_down_1_button = create_button(parent, "-1");
+    lv_obj_set_style_margin_top(grind_size_down_1_button, 10, 0);
+
+    grind_size_down_10_button = create_button(parent, "-10");
+    lv_obj_set_style_margin_top(grind_size_down_10_button, 10, 0);
+
     // using ET = EventBridgeLVGL::EventType;
     // if (refresh_stats_button) {
     //     lv_obj_add_event_cb(refresh_stats_button, EventBridgeLVGL::dispatch_event, LV_EVENT_CLICKED,
