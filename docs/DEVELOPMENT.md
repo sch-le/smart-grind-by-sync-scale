@@ -84,6 +84,8 @@ The platform dependency is automatically handled by PlatformIO via the `platform
 
 ### Build Commands
 
+source /home/leon/Nextcloud/Projects/kaffeVdi/smart-grind-by-weight/tools/venv/bin/activate
+
 **Build production firmware:**
 ```bash
 python3 tools/grinder.py build

@@ -20,6 +20,7 @@ private:
     lv_obj_t* stats_page;
     lv_obj_t* diagnostics_page;
     lv_obj_t* scale_page;
+    lv_obj_t* grind_size_page;
 
     // Info tab elements
     lv_obj_t* info_label;
@@ -69,11 +70,14 @@ private:
 
     // Tools entries / scale page elements
     lv_obj_t* scale_item;
+    lv_obj_t* grind_size_item;
     lv_obj_t* cal_button;
     lv_obj_t* motor_test_button;
     lv_obj_t* autotune_button;
     lv_obj_t* scale_weight_label;
+    lv_obj_t* grind_size_label;
     lv_obj_t* scale_tare_button;
+    lv_obj_t* grind_size_up_button;
 
     // Diagnostics tab elements
     lv_obj_t* diag_status_label;
@@ -88,7 +92,7 @@ private:
     // Common elements
     bool visible;
     bool scale_active;
-    
+    bool grind_size_active;
     BluetoothManager* bluetooth_manager;
     GrindController* grind_controller;
     GrindingScreen* grinding_screen;
@@ -125,6 +129,7 @@ public:
     lv_obj_t* get_motor_test_button() const { return motor_test_button; }
     lv_obj_t* get_autotune_button() const { return autotune_button; }
     bool is_scale_page_active() const { return scale_active; }
+    bool is_motor_page_active() const { return grind_size_active; }
     lv_obj_t* get_ble_toggle() const { return ble_toggle; }
     lv_obj_t* get_ble_startup_toggle() const { return ble_startup_toggle; }
     lv_obj_t* get_logging_toggle() const { return logging_toggle; }
@@ -147,6 +152,7 @@ private:
     void create_display_page(lv_obj_t* parent);
     void create_grind_mode_page(lv_obj_t* parent);
     void create_scale_page(lv_obj_t* parent);
+    void create_grind_size_page(lv_obj_t* parent);
     void create_data_page(lv_obj_t* parent);
     void create_stats_page(lv_obj_t* parent);
     void create_diagnostics_page(lv_obj_t* parent);

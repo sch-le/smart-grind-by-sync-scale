@@ -48,7 +48,7 @@ enum class GrinderPurgeMode {
 // SCALE CALIBRATION AND SETTLING
 //------------------------------------------------------------------------------
 // Tare and settling behavior  
-#define GRIND_SCALE_SETTLING_TOLERANCE_G 0.010f                           // Maximum standard deviation for settled reading. Used to determine if scale is settled. Increase value if you have a noisy load cell.
+#define GRIND_SCALE_SETTLING_TOLERANCE_G 0.020f                           // Maximum standard deviation for settled reading. Used to determine if scale is settled. Increase value if you have a noisy load cell.
 
 //------------------------------------------------------------------------------
 // TIME MODE PULSE SETTINGS

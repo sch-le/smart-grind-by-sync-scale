@@ -38,6 +38,7 @@ void MenuScreen::create(BluetoothManager* bluetooth, GrindController* grind_ctrl
     visible = false;
     scale_active = false;
     scale_page = nullptr;
+    grind_size_page = nullptr;
     scale_weight_label = nullptr;
     scale_tare_button = nullptr;
     scale_item = nullptr;
@@ -46,6 +47,7 @@ void MenuScreen::create(BluetoothManager* bluetooth, GrindController* grind_ctrl
     grinder_purge_amount_label = nullptr;
     grind_freshness_hours_slider = nullptr;
     grind_freshness_hours_label = nullptr;
+    grind_size_up_button = nullptr;
     lv_obj_add_flag(screen, LV_OBJ_FLAG_HIDDEN);
 
     // Create menu UI immediately at boot for instant access
@@ -134,6 +136,9 @@ void MenuScreen::create_menu_ui() {
     
     scale_page = lv_menu_page_create(menu, "Scale");
     create_scale_page(scale_page);
+    
+    grind_size_page = lv_menu_page_create(menu, "Grind Size");
+    create_grind_size_page(grind_size_page);
 
     data_page = lv_menu_page_create(menu, "Logs & Data");
     create_data_page(data_page);
@@ -147,13 +152,16 @@ void MenuScreen::create_menu_ui() {
     // Create menu items grouped with separators
     create_separator(main_page, "Tools");
     scale_item = create_menu_item(main_page, "Scale");
+    grind_size_item = create_menu_item(main_page, "Grind Size");
     cal_button = create_menu_item(main_page, "Calibrate");
     autotune_button = create_menu_item(main_page, "Tune Pulses");
     motor_test_button = create_menu_item(main_page, "Motor Test");
 
     lv_menu_set_load_page_event(menu, scale_item, scale_page);
+    lv_menu_set_load_page_event(menu, grind_size_item, grind_size_page);
 
     lv_obj_add_flag(scale_item, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_flag(grind_size_item, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_flag(cal_button, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_flag(autotune_button, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_flag(motor_test_button, LV_OBJ_FLAG_CLICKABLE);
@@ -468,6 +476,40 @@ void MenuScreen::create_scale_page(lv_obj_t* parent) {
         lv_obj_add_event_cb(scale_tare_button, EventBridgeLVGL::dispatch_event, LV_EVENT_CLICKED,
                            reinterpret_cast<void*>(static_cast<intptr_t>(ET::MENU_SCALE_TARE)));
     }
+}
+
+void MenuScreen::create_grind_size_page(lv_obj_t* parent) {
+    lv_obj_set_layout(parent, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_all(parent, 24, 0);
+    lv_obj_set_style_pad_gap(parent, 28, 0);
+    lv_obj_set_scrollbar_mode(parent, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_style_bg_opa(parent, LV_OPA_TRANSP, 0);
+
+    lv_obj_t* subtitle = lv_label_create(parent);
+    lv_label_set_text(subtitle, "Grind Size Steps");
+    lv_obj_set_style_text_font(subtitle, &lv_font_montserrat_24, 0);
+    lv_obj_set_style_text_color(subtitle, lv_color_hex(THEME_COLOR_TEXT_SECONDARY), 0);
+
+    grind_size_label = lv_label_create(parent);
+    lv_label_set_text(grind_size_label, "0 Steps");
+    lv_obj_set_style_text_font(grind_size_label, &lv_font_montserrat_56, 0);
+    lv_obj_set_style_text_color(grind_size_label, lv_color_hex(THEME_COLOR_TEXT_PRIMARY), 0);
+    lv_obj_set_style_text_align(grind_size_label, LV_TEXT_ALIGN_CENTER, 0);
+
+    grind_size_up_button = create_button(parent, "+1");
+    lv_obj_set_style_margin_top(grind_size_up_button, 10, 0);
+    
+    grind_size_up_button = create_button(parent, "+10");
+    lv_obj_set_style_margin_top(grind_size_up_button, 10, 0);
+    
+    // using ET = EventBridgeLVGL::EventType;
+    // if (refresh_stats_button) {
+    //     lv_obj_add_event_cb(refresh_stats_button, EventBridgeLVGL::dispatch_event, LV_EVENT_CLICKED,
+    //                        reinterpret_cast<void*>(static_cast<intptr_t>(ET::MENU_REFRESH_STATS)));
+    // }
+    
 }
 
 void MenuScreen::create_data_page(lv_obj_t* parent) {
