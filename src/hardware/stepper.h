@@ -19,11 +19,13 @@ class StepperDriver {
 public:
     virtual ~StepperDriver() = default;
 
-    virtual bool begin() = 0;
+    virtual bool init() = 0;
 
     virtual void step(uint16_t steps, step_direction direction) = 0;
 
     virtual uint16_t get_steps() = 0;
+
+    virtual void save_steps();
 
     virtual const char* get_driver_name() const = 0;
 };

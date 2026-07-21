@@ -8,6 +8,7 @@ void HardwareManager::init() {
     display_manager.init();
     weight_sensor.init(&preferences);
     grinder.init(HW_MOTOR_RELAY_PIN);
+    stepper.init(&preferences, HW_STEPPER_STEP_PIN, HW_STEPPER_DIR_PIN, HW_STEPPER_ENABLE_PIN, HW_STEPPER_RESET_PIN, HW_STEPPER_SLEEP_PIN, HW_STEPPER_STEPS_PER_ROTATION, HW_STEPPER_PULSE_LENGTH_US);
 
     grind_controller = nullptr; // Will be set later
 
