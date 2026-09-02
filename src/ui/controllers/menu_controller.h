@@ -37,6 +37,11 @@ public:
     void handle_brightness_normal_slider_released();
     void handle_brightness_screensaver_slider();
     void handle_brightness_screensaver_slider_released();
+    void handle_grind_size_increase();
+    void handle_grind_size_decrease();
+    void handle_grind_size_save();
+    void handle_grind_size_reset();
+    void handle_grind_size_motor();
 
     float get_normal_brightness() const;
     float get_screensaver_brightness() const;
@@ -44,6 +49,7 @@ public:
 private:
     UIManager* ui_manager_;
     lv_timer_t* motor_timer_{};
+    lv_timer_t* grind_size_motor_timer_{};
 
     void perform_factory_reset();
     void execute_purge_operation();
@@ -51,6 +57,9 @@ private:
     void stop_motor_timer();
     void motor_timer_cb(lv_timer_t* timer);
     static void static_motor_timer_cb(lv_timer_t* timer);
+    void grind_size_motor_timer_cb();
+    static void static_grind_size_motor_timer_cb(lv_timer_t* timer);
     void return_to_menu();
     void perform_diagnostics_reset();
+    void grind_size_start_grinder();
 };

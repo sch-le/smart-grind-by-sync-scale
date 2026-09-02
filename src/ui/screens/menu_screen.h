@@ -77,10 +77,10 @@ private:
     lv_obj_t* scale_weight_label;
     lv_obj_t* grind_size_label;
     lv_obj_t* scale_tare_button;
-    lv_obj_t* grind_size_up_1_button;
-    lv_obj_t* grind_size_up_10_button;
-    lv_obj_t* grind_size_down_1_button;
-    lv_obj_t* grind_size_down_10_button;
+    lv_obj_t* grind_size_increase_button;
+    lv_obj_t* grind_size_decrease_button;
+    lv_obj_t* grind_size_reset_button;
+    lv_obj_t* grind_size_motor_button;
 
     // Diagnostics tab elements
     lv_obj_t* diag_status_label;
@@ -121,6 +121,7 @@ public:
     void update_grind_freshness_hours_label(float hours);
     void reset_scale_display();
     void update_scale_weight(float weight);
+    void update_grind_size_label(float rotation);
 
     bool is_visible() const { return visible; }
     lv_obj_t* get_screen() const { return screen; }

@@ -23,9 +23,17 @@ public:
 
     virtual void step(uint16_t steps, step_direction direction) = 0;
 
-    virtual uint16_t get_steps() = 0;
+    virtual int32_t get_steps() = 0;
 
-    virtual void save_steps();
+    virtual void start_step(step_direction direction);
+
+    virtual void stop_step();    
+
+    virtual void save_steps() = 0;
+
+    virtual void reset_steps() = 0;
+
+    virtual float get_rotation() = 0;
 
     virtual const char* get_driver_name() const = 0;
 };

@@ -17,8 +17,12 @@ class drv8825_driver : public StepperDriver {
     uint16_t step_pulse_length_us;
     DRV8825 drv8825_stepper;
     Preferences* prefs = nullptr;  // Pointer to Preferences for saving step count
+    step_direction direction;
+    int32_t steps;
+    uint32_t start_time_us = 0;  // Start time for step timing [µs]
 
-  public:
+    public:
+
     drv8825_driver() = default;
     
     virtual ~drv8825_driver() = default;
@@ -29,9 +33,20 @@ class drv8825_driver : public StepperDriver {
 
     void step(uint16_t steps, step_direction direction) override;
 
-    uint16_t get_steps() override;
+    void start_step(step_direction direction) override;
 
+    void stop_step() override;
+    
+    int32_t get_steps() override;
+    
     void save_steps() override;
+    
+    void reset_steps() override;
+
+    float get_rotation() override;
 
     const char* get_driver_name() const override { return "DRV8825"; }
+
+    private:
+    //static void count_steps();
 };

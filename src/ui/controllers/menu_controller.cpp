@@ -40,6 +40,10 @@ void MenuUIController::register_events() {
     EventBridgeLVGL::register_handler(ET::MENU_DIAGNOSTIC_RESET, [this](lv_event_t*) { handle_diagnostics_reset(); });
     EventBridgeLVGL::register_handler(ET::MENU_BACK, [this](lv_event_t*) { handle_back(); });
     EventBridgeLVGL::register_handler(ET::MENU_REFRESH_STATS, [this](lv_event_t*) { handle_refresh_stats(); });
+    EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_INCREASE, [this](lv_event_t*) { handle_grind_size_increase(); });
+    EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_DECREASE, [this](lv_event_t*) { handle_grind_size_decrease(); });
+    EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_RESET, [this](lv_event_t*) { handle_grind_size_reset(); });
+    EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_SAVE, [this](lv_event_t*) { handle_grind_size_save(); });
 
     EventBridgeLVGL::register_handler(ET::BLE_TOGGLE, [this](lv_event_t*) { handle_ble_toggle(); });
     EventBridgeLVGL::register_handler(ET::BLE_STARTUP_TOGGLE, [this](lv_event_t*) { handle_ble_startup_toggle(); });
@@ -691,4 +695,88 @@ void MenuUIController::static_motor_timer_cb(lv_timer_t* timer) {
     if (controller) {
         controller->motor_timer_cb(timer);
     }
+}
+
+static void adjust_grind_size(UIManager* ui_manager, uint16_t steps, step_direction direction) {
+    auto* stepper = ui_manager->get_hardware_manager()->get_stepper();
+    if (!stepper) { return; }
+    
+    //stepper->step(steps, direction);
+    stepper->start_step(direction);
+
+    ui_manager->menu_screen.update_grind_size_label(stepper->get_rotation());
+}
+
+void MenuUIController::handle_grind_size_increase() {
+  if (!ui_manager_) { return; }
+
+  grind_size_start_grinder();
+  adjust_grind_size(ui_manager_, 32, step_direction::STEP_DIRECTION_CW);
+}
+
+void MenuUIController::handle_grind_size_decrease() {
+  if (!ui_manager_) { return; }
+  
+  grind_size_start_grinder();
+  adjust_grind_size(ui_manager_, 32, step_direction::STEP_DIRECTION_CCW);
+}
+
+void MenuUIController::grind_size_start_grinder() {
+  if (!ui_manager_) { return; }
+
+  // Start or reset timer to stop grinder
+  if (grind_size_motor_timer_) {
+    lv_timer_reset(grind_size_motor_timer_);
+  }
+  else {
+    grind_size_motor_timer_ = lv_timer_create(static_grind_size_motor_timer_cb, 1000, this);
+  }
+
+  // Start grinder
+  auto* grinder = ui_manager_->get_hardware_manager()->get_grinder();
+  if (!grinder->is_grinding()) { grinder->start(); }
+
+  ui_manager_->set_background_active(true);
+}
+
+void MenuUIController::grind_size_motor_timer_cb() {
+  if (!ui_manager_) { return; }
+  
+  // Stop grinder
+  auto* grinder = ui_manager_->get_hardware_manager()->get_grinder(); 
+  grinder->stop();
+
+  if (grind_size_motor_timer_) {
+    lv_timer_del(grind_size_motor_timer_);
+    grind_size_motor_timer_ = nullptr;
+  }
+
+  ui_manager_->set_background_active(false);
+}
+
+void MenuUIController::static_grind_size_motor_timer_cb(lv_timer_t* timer) {
+  if (!timer) { return; }
+    
+  auto* controller = static_cast<MenuUIController*>(lv_timer_get_user_data(timer));
+  if (!controller) { return; }
+
+  controller->grind_size_motor_timer_cb();
+}
+
+void MenuUIController::handle_grind_size_save() {
+  if (!ui_manager_) { return; }
+  
+  auto* stepper = ui_manager_->get_hardware_manager()->get_stepper();
+  stepper->stop_step();
+  stepper->save_steps();
+}
+
+void MenuUIController::handle_grind_size_reset() {
+  if (!ui_manager_) { return; }
+
+  auto* stepper = ui_manager_->get_hardware_manager()->get_stepper();
+  stepper->reset_steps();
+  stepper->save_steps();
+
+  ui_manager_->menu_screen.update_grind_size_label(stepper->get_rotation());
 }
