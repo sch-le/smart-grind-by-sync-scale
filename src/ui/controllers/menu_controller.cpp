@@ -44,6 +44,7 @@ void MenuUIController::register_events() {
     EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_DECREASE, [this](lv_event_t*) { handle_grind_size_decrease(); });
     EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_RESET, [this](lv_event_t*) { handle_grind_size_reset(); });
     EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_SAVE, [this](lv_event_t*) { handle_grind_size_save(); });
+    EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_REFRESH, [this](lv_event_t*) { handle_grind_size_refresh(); });
 
     EventBridgeLVGL::register_handler(ET::BLE_TOGGLE, [this](lv_event_t*) { handle_ble_toggle(); });
     EventBridgeLVGL::register_handler(ET::BLE_STARTUP_TOGGLE, [this](lv_event_t*) { handle_ble_startup_toggle(); });
@@ -710,13 +711,24 @@ static void adjust_grind_size(UIManager* ui_manager, uint16_t steps, step_direct
 void MenuUIController::handle_grind_size_increase() {
   if (!ui_manager_) { return; }
 
+  // If the last grind size adjustment was less than 5s ago, ignore this event
+  if ((this->grind_size_cooldown != 0) && (millis() - this->grind_size_cooldown < 2500u))
+  { return; }
+
+  this->grind_size_cooldown = 0u;
+
   grind_size_start_grinder();
   adjust_grind_size(ui_manager_, 32, step_direction::STEP_DIRECTION_CW);
 }
 
 void MenuUIController::handle_grind_size_decrease() {
   if (!ui_manager_) { return; }
-  
+
+  if ((this->grind_size_cooldown != 0) && (millis() - this->grind_size_cooldown < 2500u))
+  { return; }
+
+  this->grind_size_cooldown = 0u;
+
   grind_size_start_grinder();
   adjust_grind_size(ui_manager_, 32, step_direction::STEP_DIRECTION_CCW);
 }
@@ -724,26 +736,31 @@ void MenuUIController::handle_grind_size_decrease() {
 void MenuUIController::grind_size_start_grinder() {
   if (!ui_manager_) { return; }
 
+  // Start grinder
+  auto* grinder = ui_manager_->get_hardware_manager()->get_grinder();
+  if (!grinder->is_grinding()) { grinder->start(); }
+
+  if (grind_size_motor_timer_) {
+    lv_timer_reset(grind_size_motor_timer_);
+  }
+
+  ui_manager_->set_background_active(true);
+}
+
+void MenuUIController::grind_size_stop_motor() {
+  if (!ui_manager_) { return; }
+  
   // Start or reset timer to stop grinder
   if (grind_size_motor_timer_) {
     lv_timer_reset(grind_size_motor_timer_);
   }
   else {
-    grind_size_motor_timer_ = lv_timer_create(static_grind_size_motor_timer_cb, 1000, this);
+    grind_size_motor_timer_ = lv_timer_create(static_grind_size_motor_timer_cb, 500, this);
   }
-
-  // Start grinder
-  auto* grinder = ui_manager_->get_hardware_manager()->get_grinder();
-  if (!grinder->is_grinding()) { grinder->start(); }
-
-  ui_manager_->set_background_active(true);
 }
 
 void MenuUIController::grind_size_motor_timer_cb() {
-  if (!ui_manager_) { return; }
-  
-  // Stop grinder
-  auto* grinder = ui_manager_->get_hardware_manager()->get_grinder(); 
+   auto* grinder = ui_manager_->get_hardware_manager()->get_grinder(); 
   grinder->stop();
 
   if (grind_size_motor_timer_) {
@@ -769,6 +786,14 @@ void MenuUIController::handle_grind_size_save() {
   auto* stepper = ui_manager_->get_hardware_manager()->get_stepper();
   stepper->stop_step();
   stepper->save_steps();
+
+  grind_size_stop_motor();
+
+  ui_manager_->menu_screen.update_grind_size_label(stepper->get_rotation());
+
+  if (this->grind_size_cooldown == 0) {
+    this->grind_size_cooldown = millis(); // Reset cooldown timer after saving grind size
+  }
 }
 
 void MenuUIController::handle_grind_size_reset() {
@@ -778,5 +803,12 @@ void MenuUIController::handle_grind_size_reset() {
   stepper->reset_steps();
   stepper->save_steps();
 
+  ui_manager_->menu_screen.update_grind_size_label(stepper->get_rotation());
+}
+
+void MenuUIController::handle_grind_size_refresh() {
+  if (!ui_manager_) { return; }
+
+  auto* stepper = ui_manager_->get_hardware_manager()->get_stepper();
   ui_manager_->menu_screen.update_grind_size_label(stepper->get_rotation());
 }

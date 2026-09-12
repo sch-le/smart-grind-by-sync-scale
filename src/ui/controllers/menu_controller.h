@@ -42,6 +42,7 @@ public:
     void handle_grind_size_save();
     void handle_grind_size_reset();
     void handle_grind_size_motor();
+    void handle_grind_size_refresh();
 
     float get_normal_brightness() const;
     float get_screensaver_brightness() const;
@@ -50,6 +51,7 @@ private:
     UIManager* ui_manager_;
     lv_timer_t* motor_timer_{};
     lv_timer_t* grind_size_motor_timer_{};
+    uint64_t grind_size_cooldown;
 
     void perform_factory_reset();
     void execute_purge_operation();
@@ -62,4 +64,5 @@ private:
     void return_to_menu();
     void perform_diagnostics_reset();
     void grind_size_start_grinder();
+    void grind_size_stop_motor();
 };

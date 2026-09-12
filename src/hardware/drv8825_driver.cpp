@@ -5,6 +5,7 @@
 #include "bluetooth/manager.h"
 
 #define MICROSTEP 32u
+#define PWM_FREQ 800u
 
 bool drv8825_driver::init(Preferences* preferences, uint8_t step_pin, uint8_t dir_pin, uint8_t enable_pin, uint8_t reset_pin, uint8_t sleep_pin, uint16_t steps_per_rotation, uint16_t step_pulse_length_us) {
   this->prefs = preferences;
@@ -88,31 +89,33 @@ void drv8825_driver::start_step(step_direction direction)
   
   start_time_us = micros();
 
-  analogWriteFrequency(step_pin, 1000u);  // Set frequency to 1 kHz
+  analogWriteFrequency(step_pin, PWM_FREQ);
   analogWrite(step_pin, 127u);
 }
 
 void drv8825_driver::stop_step(void)
 {
   analogWrite(step_pin, 0u);
-  
-  uint32_t elapsed_time_us = micros() - start_time_us;
-  uint32_t elapsed_steps = (uint64_t)elapsed_time_us * 1000u / 1000000u;
-  start_time_us = 0u;
 
-  switch (direction) {
-    case STEP_DIRECTION_CW:
-    {
-      this->steps -= elapsed_steps;
-      break;
+  if (start_time_us != 0u)
+  {
+    uint32_t elapsed_steps = (uint64_t)(micros()  - start_time_us) * PWM_FREQ / 1000000u;
+    start_time_us = 0u;
+    
+    switch (direction) {
+      case STEP_DIRECTION_CW:
+      {
+        this->steps -= elapsed_steps;
+        break;
+      }
+      case STEP_DIRECTION_CCW:
+      {
+        this->steps += elapsed_steps;
+        break;
+      }
+      default:
+      { break; }
     }
-    case STEP_DIRECTION_CCW:
-    {
-      this->steps += elapsed_steps;
-      break;
-    }
-    default:
-    { break; }
   }
 
   drv8825_stepper.disable();
@@ -123,9 +126,9 @@ int32_t drv8825_driver::get_steps() {
   {
     // steps is currently running, calculate the elapsed steps since start
     uint32_t new_start_time_us = micros();
-    uint32_t elapsed_time_us = new_start_time_us - start_time_us;
+    uint32_t elapsed_steps = (uint64_t)(new_start_time_us - start_time_us) * PWM_FREQ / 1000000u;
     start_time_us = new_start_time_us;
-    uint32_t elapsed_steps = elapsed_time_us * 1000u / 1000000u;
+    
     switch (direction) {
       case STEP_DIRECTION_CW:
       {
@@ -156,5 +159,5 @@ void drv8825_driver::reset_steps() {
 }
 
 float drv8825_driver::get_rotation() {
-  return ((float)this->steps * 360.0) / (float)this->steps_per_rotation ;
+  return (this->get_steps() * 360.0) / (float)this->steps_per_rotation ;
 }

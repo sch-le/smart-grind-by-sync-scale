@@ -534,15 +534,19 @@ void MenuScreen::create_grind_size_page(lv_obj_t *parent)
   // Increase and decrease grind size when holding; Save grind size when releasing
   if (grind_size_increase_button)
   {
-    lv_obj_add_event_cb(grind_size_increase_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSED, //LV_EVENT_PRESSING,
+    lv_obj_add_event_cb(grind_size_increase_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSED,
                         reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_GRIND_SIZE_DECREASE)));
+    lv_obj_add_event_cb(grind_size_increase_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSING,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_GRIND_SIZE_REFRESH)));
     lv_obj_add_event_cb(grind_size_increase_button, EventBridgeLVGL::dispatch_event, LV_EVENT_RELEASED,
                         reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_GRIND_SIZE_SAVE)));
   }
   if (grind_size_decrease_button)
   {
-    lv_obj_add_event_cb(grind_size_decrease_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSED, //LV_EVENT_CLICKED, //LV_EVENT_PRESSING,
+    lv_obj_add_event_cb(grind_size_decrease_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSED,//LV_EVENT_CLICKED, //LV_EVENT_PRESSING,
                         reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_GRIND_SIZE_INCREASE)));
+    lv_obj_add_event_cb(grind_size_decrease_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSING,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_GRIND_SIZE_REFRESH)));
     lv_obj_add_event_cb(grind_size_decrease_button, EventBridgeLVGL::dispatch_event, LV_EVENT_RELEASED,//LV_EVENT_CLICKED,
                         reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_GRIND_SIZE_SAVE)));
   }
