@@ -8,6 +8,7 @@
 #include "screens/ready_screen.h"
 #include "screens/edit_screen.h"
 #include "screens/grinding_screen.h"
+#include "screens/grind_sync_screen.h"
 #include "screens/menu_screen.h"
 #include "screens/calibration_screen.h"
 #include "screens/confirm_screen.h"
@@ -27,10 +28,12 @@
 #include "controllers/screen_timeout_controller.h"
 #include "controllers/menu_controller.h"
 #include "controllers/status_indicator_controller.h"
+#include "controllers/grind_sync_controller.h"
 #include "../system/state_machine.h"
 #include "../system/diagnostics_controller.h"
 #include "../controllers/profile_controller.h"
 #include "../controllers/grind_controller.h"
+#include "../controllers/recipe_controller.h"
 #include "../controllers/grind_events.h"
 #include "../controllers/grind_mode.h"
 #include "../hardware/hardware_manager.h"
@@ -61,6 +64,7 @@ class UIManager {
     friend class OtaDataExportController;
     friend class ScreenTimeoutController;
     friend class JogAdjustController;
+    friend class GrindSyncUIController;
     
 private:
     HardwareManager* hardware_manager;
@@ -68,6 +72,7 @@ private:
     ProfileController* profile_controller;
     GrindController* grind_controller;
     BluetoothManager* bluetooth_manager;
+    RecipeController* recipe_controller;
     
     lv_timer_t* jog_timer;
 
@@ -88,6 +93,7 @@ private:
     std::unique_ptr<ReadyUIController> ready_controller_;
     std::unique_ptr<EditUIController> edit_controller_;
     std::unique_ptr<GrindingUIController> grinding_controller_;
+    std::unique_ptr<GrindSyncUIController> grind_sync_controller_;
     std::unique_ptr<MenuUIController> menu_controller_;
     std::unique_ptr<StatusIndicatorController> status_indicator_controller_;
     std::unique_ptr<CalibrationUIController> calibration_controller_;
@@ -102,6 +108,7 @@ public:
     ReadyScreen ready_screen;
     EditScreen edit_screen;
     GrindingScreen grinding_screen;
+    GrindSyncScreen grind_sync_screen;
     MenuScreen menu_screen;
     CalibrationScreen calibration_screen;
     ConfirmScreen confirm_screen;

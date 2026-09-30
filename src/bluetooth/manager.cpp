@@ -66,6 +66,7 @@ void BluetoothManager::init(Preferences* prefs) {
     // Create UI status queue to marshal UI updates to UI task
     if (!ui_status_queue) {
         ui_status_queue = xQueueCreate(8, sizeof(UIStatusMessage));
+        configASSERT(ui_status_queue != NULL);
     }
 }
 
@@ -103,7 +104,8 @@ bool BluetoothManager::dequeue_ui_status(char* out, size_t out_len) {
 
 void BluetoothManager::enable(unsigned long timeout_ms) {
     if (ble_enabled) return;
-    
+    printf("free heap: %u\n", (unsigned)xPortGetFreeHeapSize());
+
     // Use default timeout if none specified
     if (timeout_ms == 0) {
         timeout_ms = BLE_AUTO_DISABLE_TIMEOUT_MS;
@@ -116,9 +118,10 @@ void BluetoothManager::enable(unsigned long timeout_ms) {
     ota_handler.enable_ble_power_mode();
     enable_time = millis();
     last_disconnect_time = enable_time; // Start disconnected timeout from enable time
-    
+
     // Initialize BLE with delays for power stability
     BLEDevice::init(BLE_DEVICE_NAME);
+    printf("free heap after BLEDevice::init(): %u\n", (unsigned)xPortGetFreeHeapSize());
     
     // Request a larger MTU to improve throughput when the client supports it.
     // Some platforms (e.g., macOS/iOS) may ignore this request and keep a lower MTU.
@@ -238,15 +241,19 @@ void BluetoothManager::enable(unsigned long timeout_ms) {
 
     ota_service->start();
     delay(BLE_INIT_START_DELAY_MS);
+    printf("free heap after ota_service->start(): %u\n", (unsigned)xPortGetFreeHeapSize());
     
     data_service->start();
     delay(BLE_INIT_START_DELAY_MS);
+    printf("free heap after data_service->start(): %u\n", (unsigned)xPortGetFreeHeapSize());
     
     debug_service->start();
     delay(BLE_INIT_START_DELAY_MS);
+    printf("free heap after debug_service->start(): %u\n", (unsigned)xPortGetFreeHeapSize());
     
     sysinfo_service->start();
     delay(BLE_INIT_START_DELAY_MS);
+    printf("free heap after sysinfo_service->start(): %u\n", (unsigned)xPortGetFreeHeapSize());
     
     BLEAdvertising* advertising = BLEDevice::getAdvertising();
     advertising->addServiceUUID(BLE_OTA_SERVICE_UUID);

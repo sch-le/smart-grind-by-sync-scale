@@ -4,6 +4,7 @@
 #include "WeightSensor.h"
 #include "grinder.h"
 #include "drv8825_driver.h"
+#include "../controllers/recipe_controller.h"
 #include "../controllers/autotune_controller.h"
 
 class GrindController; // Forward declaration
@@ -18,6 +19,7 @@ private:
     AutoTuneController autotune_controller;
     bool initialized;
     GrindController* grind_controller; // Reference to get grinding state
+    RecipeController* recipe_controller; // Reference to get recipe state
     
 public:
     void init();
@@ -27,6 +29,9 @@ public:
         // Initialize autotune controller with grind controller reference
         autotune_controller.init(&weight_sensor, &grinder, gc);
     }
+    void set_recipe_controller(RecipeController* rc) {
+        recipe_controller = rc;
+    }
     
     DisplayManager* get_display() { return &display_manager; }
     WeightSensor* get_weight_sensor() { return &weight_sensor; }
@@ -35,6 +40,7 @@ public:
     drv8825_driver* get_stepper() { return &stepper; }
     Preferences* get_preferences() { return &preferences; }
     AutoTuneController* get_autotune_controller() { return &autotune_controller; }
+    RecipeController* get_recipe_controller() { return recipe_controller; }
     
     bool is_initialized() const { return initialized; }
 };

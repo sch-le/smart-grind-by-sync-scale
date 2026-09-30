@@ -106,3 +106,15 @@ enum class GrinderPurgeMode {
 #define GRIND_AUTOTUNE_COLLECTION_DELAY_MS 1500                                   // Minimum wait after pulse for grounds to drop
 #define GRIND_AUTOTUNE_SETTLING_TIMEOUT_MS 5000                                   // Max wait per pulse for scale settling
 #define GRIND_AUTOTUNE_WEIGHT_THRESHOLD_G GRIND_SCALE_SETTLING_TOLERANCE_G        // 0.010g detection threshold
+
+
+//------------------------------------------------------------------------------
+// RECIPE
+//------------------------------------------------------------------------------
+#define RECIPE_MAX_WEIGHT_MG 100000                                               // Maximum extraction weight [mg]
+#define RECIPE_MIN_WEIGHT_MG 1000                                                  // Minimum extraction weight [mg]
+#define RECIPE_WEIGHT_STEP_MG 100                                                 // 0.1g step size for weight adjustment [mg]
+#define RECIPE_MAX_TIME_MS 120000                                                 // Maximum extraction time [ms]
+#define RECIPE_MIN_TIME_MS 1000                                                   // Minimum extraction time [ms]
+#define RECIPE_TIME_STEP_MS 100                                                   // 0.1s step size for time adjustment [ms]
+#define RECIPE_TIMEOUT_MS 60000                                                   // Maximum time to wait for recipe response [ms]

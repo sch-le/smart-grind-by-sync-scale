@@ -43,6 +43,11 @@ public:
     void handle_grind_size_reset();
     void handle_grind_size_motor();
     void handle_grind_size_refresh();
+    void handle_recipe_time_increase();
+    void handle_recipe_time_decrease();
+    void handle_recipe_weight_increase();
+    void handle_recipe_weight_decrease();
+    void handle_recipe_save();
 
     float get_normal_brightness() const;
     float get_screensaver_brightness() const;

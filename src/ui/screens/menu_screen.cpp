@@ -41,6 +41,7 @@ void MenuScreen::create(BluetoothManager *bluetooth, GrindController *grind_ctrl
   scale_active = false;
   scale_page = nullptr;
   grind_size_page = nullptr;
+  recipe_page = nullptr;
   scale_weight_label = nullptr;
   scale_tare_button = nullptr;
   scale_item = nullptr;
@@ -52,7 +53,10 @@ void MenuScreen::create(BluetoothManager *bluetooth, GrindController *grind_ctrl
   grind_size_increase_button = nullptr;
   grind_size_decrease_button = nullptr;
   grind_size_reset_button = nullptr;
-  //grind_size_motor_button = nullptr;
+  recipe_increase_time_button = nullptr;
+  recipe_decrease_time_button = nullptr;
+  recipe_increase_weight_button = nullptr;
+  recipe_decrease_weight_button = nullptr;
   lv_obj_add_flag(screen, LV_OBJ_FLAG_HIDDEN);
 
   // Create menu UI immediately at boot for instant access
@@ -148,6 +152,9 @@ void MenuScreen::create_menu_ui()
   grind_size_page = lv_menu_page_create(menu, "Grind Size");
   create_grind_size_page(grind_size_page);
 
+  recipe_page = lv_menu_page_create(menu, "Recipe");
+  create_recipe_page(recipe_page);
+
   data_page = lv_menu_page_create(menu, "Logs & Data");
   create_data_page(data_page);
 
@@ -161,15 +168,18 @@ void MenuScreen::create_menu_ui()
   create_separator(main_page, "Tools");
   scale_item = create_menu_item(main_page, "Scale");
   grind_size_item = create_menu_item(main_page, "Grind Size");
+  recipe_item = create_menu_item(main_page, "Recipe");
   cal_button = create_menu_item(main_page, "Calibrate");
   autotune_button = create_menu_item(main_page, "Tune Pulses");
   motor_test_button = create_menu_item(main_page, "Motor Test");
 
   lv_menu_set_load_page_event(menu, scale_item, scale_page);
   lv_menu_set_load_page_event(menu, grind_size_item, grind_size_page);
+  lv_menu_set_load_page_event(menu, recipe_item, recipe_page);
 
   lv_obj_add_flag(scale_item, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_flag(grind_size_item, LV_OBJ_FLAG_CLICKABLE);
+  lv_obj_add_flag(recipe_item, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_flag(cal_button, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_flag(autotune_button, LV_OBJ_FLAG_CLICKABLE);
   lv_obj_add_flag(motor_test_button, LV_OBJ_FLAG_CLICKABLE);
@@ -192,8 +202,10 @@ void MenuScreen::create_menu_ui()
   }
 
   create_separator(main_page, "Settings");
-  lv_obj_t *bluetooth_item = create_menu_item(main_page, "Bluetooth");
-  lv_menu_set_load_page_event(menu, bluetooth_item, bluetooth_page);
+
+  // #BLE: Disable for now, as Bluetooth is disabled due to memory constraints
+  //lv_obj_t *bluetooth_item = create_menu_item(main_page, "Bluetooth");
+  //lv_menu_set_load_page_event(menu, bluetooth_item, bluetooth_page);
 
   lv_obj_t *display_item = create_menu_item(main_page, "Display");
   lv_menu_set_load_page_event(menu, display_item, display_page);
@@ -556,6 +568,74 @@ void MenuScreen::create_grind_size_page(lv_obj_t *parent)
     lv_obj_add_event_cb(grind_size_reset_button, EventBridgeLVGL::dispatch_event, LV_EVENT_CLICKED,
                         reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_GRIND_SIZE_RESET)));
   }
+}
+
+void MenuScreen::create_recipe_page(lv_obj_t *parent)
+{
+  lv_obj_set_layout(parent, LV_LAYOUT_FLEX);
+  lv_obj_set_flex_flow(parent, LV_FLEX_FLOW_ROW_WRAP);
+  lv_obj_set_flex_align(parent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_obj_set_style_pad_all(parent, 24, 0);
+  lv_obj_set_style_pad_gap(parent, 28, 0);
+  lv_obj_set_scrollbar_mode(parent, LV_SCROLLBAR_MODE_OFF);
+  lv_obj_set_style_bg_opa(parent, LV_OPA_TRANSP, 0);
+  
+  // Weight adjustment section
+  recipe_weight_label = lv_label_create(parent);
+  lv_label_set_text(recipe_weight_label, "0.0 g");
+  lv_obj_set_style_text_font(recipe_weight_label, &lv_font_montserrat_32, 0);
+  lv_obj_set_style_text_color(recipe_weight_label, lv_color_hex(THEME_COLOR_TEXT_PRIMARY), 0);
+  lv_obj_set_style_text_align(recipe_weight_label, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_set_size(recipe_weight_label, LV_PCT(100), LV_SIZE_CONTENT);
+  recipe_decrease_weight_button = create_button(parent, "-", lv_color_hex(THEME_COLOR_ACCENT), 102, 60, &lv_font_montserrat_28);
+  recipe_increase_weight_button = create_button(parent, "+", lv_color_hex(THEME_COLOR_ACCENT), 102, 60, &lv_font_montserrat_28);
+
+  // Time adjustment section
+  recipe_time_label = lv_label_create(parent);
+  lv_label_set_text(recipe_time_label, "0.0 s");
+  lv_obj_set_style_text_font(recipe_time_label, &lv_font_montserrat_32, 0);
+  lv_obj_set_style_text_color(recipe_time_label, lv_color_hex(THEME_COLOR_TEXT_PRIMARY), 0);
+  lv_obj_set_style_text_align(recipe_time_label, LV_TEXT_ALIGN_CENTER, 0);
+  lv_obj_set_size(recipe_time_label, LV_PCT(100), LV_SIZE_CONTENT);
+  recipe_decrease_time_button = create_button(parent, "-", lv_color_hex(THEME_COLOR_ACCENT), 102, 60, &lv_font_montserrat_28);
+  recipe_increase_time_button = create_button(parent, "+", lv_color_hex(THEME_COLOR_ACCENT), 102, 60, &lv_font_montserrat_28);
+
+  // Events to handle button presses for weight and time adjustments, as well as saving the recipe
+  using ET = EventBridgeLVGL::EventType;
+
+  // Increase/Decrease weight and time when holding
+  if (recipe_increase_weight_button)
+  {
+    lv_obj_add_event_cb(recipe_increase_weight_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSING,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_RECIPE_WEIGHT_INCREASE)));
+     lv_obj_add_event_cb(recipe_increase_weight_button, EventBridgeLVGL::dispatch_event, LV_EVENT_RELEASED,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_RECIPE_SAVE)));
+  }
+  if (recipe_decrease_weight_button)
+  {
+    lv_obj_add_event_cb(recipe_decrease_weight_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSING,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_RECIPE_WEIGHT_DECREASE)));
+    lv_obj_add_event_cb(recipe_decrease_weight_button, EventBridgeLVGL::dispatch_event, LV_EVENT_RELEASED,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_RECIPE_SAVE)));
+  }
+  if (recipe_increase_time_button)
+  {
+    lv_obj_add_event_cb(recipe_increase_time_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSING,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_RECIPE_TIME_INCREASE)));
+    lv_obj_add_event_cb(recipe_increase_time_button, EventBridgeLVGL::dispatch_event, LV_EVENT_RELEASED,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_RECIPE_SAVE)));
+  }
+  if (recipe_decrease_time_button)  
+  {
+    lv_obj_add_event_cb(recipe_decrease_time_button, EventBridgeLVGL::dispatch_event, LV_EVENT_PRESSING,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_RECIPE_TIME_DECREASE)));
+    lv_obj_add_event_cb(recipe_decrease_time_button, EventBridgeLVGL::dispatch_event, LV_EVENT_RELEASED,
+                        reinterpret_cast<void *>(static_cast<intptr_t>(ET::MENU_RECIPE_SAVE)));
+  }
+
+  // Initialize recipe labels from recipe controller
+  update_recipe_weight_label((float)hardware_manager->get_recipe_controller()->get_target_weight_mg()/1000.0f);
+  update_recipe_time_label((float)hardware_manager->get_recipe_controller()->get_target_time_ms()/1000.0f);
 }
 
 void MenuScreen::create_data_page(lv_obj_t *parent)
@@ -1024,6 +1104,30 @@ void MenuScreen::update_grind_size_label(float rotation)
   char buffer[32];
   snprintf(buffer, sizeof(buffer), "%.01f °", rotation);
   lv_label_set_text(grind_size_label, buffer);
+}
+
+void MenuScreen::update_recipe_weight_label(float weight_g)
+{
+  if (!recipe_weight_label)
+  {
+    return;
+  }
+
+  char buffer[32];
+  snprintf(buffer, sizeof(buffer), "%.1f g", weight_g);
+  lv_label_set_text(recipe_weight_label, buffer);
+}
+
+void MenuScreen::update_recipe_time_label(float time_s)
+{
+  if (!recipe_time_label)
+  {
+    return;
+  }
+
+  char buffer[32];
+  snprintf(buffer, sizeof(buffer), "%.1f s", time_s);
+  lv_label_set_text(recipe_time_label, buffer);
 }
 
 void MenuScreen::update_brightness_labels(int normal_percent, int screensaver_percent)

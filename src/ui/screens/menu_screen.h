@@ -21,6 +21,7 @@ private:
     lv_obj_t* diagnostics_page;
     lv_obj_t* scale_page;
     lv_obj_t* grind_size_page;
+    lv_obj_t* recipe_page;
 
     // Info tab elements
     lv_obj_t* info_label;
@@ -70,17 +71,28 @@ private:
 
     // Tools entries / scale page elements
     lv_obj_t* scale_item;
-    lv_obj_t* grind_size_item;
     lv_obj_t* cal_button;
     lv_obj_t* motor_test_button;
     lv_obj_t* autotune_button;
     lv_obj_t* scale_weight_label;
-    lv_obj_t* grind_size_label;
     lv_obj_t* scale_tare_button;
+    
+    // Grind size page elements
+    lv_obj_t* grind_size_item;
     lv_obj_t* grind_size_increase_button;
     lv_obj_t* grind_size_decrease_button;
     lv_obj_t* grind_size_reset_button;
     lv_obj_t* grind_size_motor_button;
+    lv_obj_t* grind_size_label;
+
+    // Recipe page elements
+    lv_obj_t* recipe_item;
+    lv_obj_t* recipe_increase_time_button;
+    lv_obj_t* recipe_decrease_time_button;
+    lv_obj_t* recipe_increase_weight_button;
+    lv_obj_t* recipe_decrease_weight_button;
+    lv_obj_t* recipe_time_label;
+    lv_obj_t* recipe_weight_label;
 
     // Diagnostics tab elements
     lv_obj_t* diag_status_label;
@@ -96,11 +108,15 @@ private:
     bool visible;
     bool scale_active;
     bool grind_size_active;
+    bool recipe_active;
     BluetoothManager* bluetooth_manager;
     GrindController* grind_controller;
     GrindingScreen* grinding_screen;
     class HardwareManager* hardware_manager; // Forward declaration to access preferences
     DiagnosticsController* diagnostics_controller;
+    uint32_t recipe_time_ms;
+    uint32_t recipe_weight_mg;
+
 
 public:
     static constexpr float kPurgeSliderScale = 10.0f; // Slider uses 0.1g increments
@@ -122,6 +138,8 @@ public:
     void reset_scale_display();
     void update_scale_weight(float weight);
     void update_grind_size_label(float rotation);
+    void update_recipe_time_label(float time_s);
+    void update_recipe_weight_label(float weight_g);
 
     bool is_visible() const { return visible; }
     lv_obj_t* get_screen() const { return screen; }
@@ -134,6 +152,7 @@ public:
     lv_obj_t* get_autotune_button() const { return autotune_button; }
     bool is_scale_page_active() const { return scale_active; }
     bool is_motor_page_active() const { return grind_size_active; }
+    bool is_recipe_page_active() const { return recipe_active; }
     lv_obj_t* get_ble_toggle() const { return ble_toggle; }
     lv_obj_t* get_ble_startup_toggle() const { return ble_startup_toggle; }
     lv_obj_t* get_logging_toggle() const { return logging_toggle; }
@@ -157,6 +176,7 @@ private:
     void create_grind_mode_page(lv_obj_t* parent);
     void create_scale_page(lv_obj_t* parent);
     void create_grind_size_page(lv_obj_t* parent);
+    void create_recipe_page(lv_obj_t* parent);
     void create_data_page(lv_obj_t* parent);
     void create_stats_page(lv_obj_t* parent);
     void create_diagnostics_page(lv_obj_t* parent);

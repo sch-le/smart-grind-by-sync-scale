@@ -79,6 +79,7 @@ void UIManager::create_ui() {
     grinding_screen.init(hardware_manager->get_preferences());
     grinding_screen.create();
     grinding_screen.set_mode(current_mode);
+    grind_sync_screen.create();
     menu_screen.create(bluetooth_manager, grind_controller, &grinding_screen, hardware_manager, diagnostics_controller_.get());
     calibration_screen.create();
     confirm_screen.create();
@@ -98,11 +99,16 @@ void UIManager::create_ui() {
     if (status_indicator_controller_) {
         status_indicator_controller_->build();
     }
+
+    if (grind_sync_controller_) {
+        grind_sync_controller_->build_controls();
+    }
     
     // Set up initial state
     ready_screen.hide();
     edit_screen.hide();
     grinding_screen.hide();
+    grind_sync_screen.hide();
     menu_screen.hide();
     calibration_screen.hide();
     confirm_screen.hide();
@@ -164,7 +170,12 @@ void UIManager::update() {
         case UIState::READY:
             // Ready state - no special handling needed
             break;
-            
+        case UIState::RECIPE_SENDING:
+        case UIState::RECIPE_RECEIVING:
+        case UIState::RECIPE_TIMEOUT:
+            grind_sync_controller_->update(current);
+            break;
+
         default:
             break;
     }
@@ -183,10 +194,13 @@ void UIManager::update() {
 void UIManager::switch_to_state(UIState new_state) {
     state_machine->transition_to(new_state);
 
+    LOG_BLE("[%lums SWITCH_TO_STATE] Switching to state: %s\n", millis(), state_machine->get_state_name(new_state));
+
     // Hide all screens before showing the requested one
     ready_screen.hide();
     edit_screen.hide();
     grinding_screen.hide();
+    grind_sync_screen.hide();
     menu_screen.hide();
     calibration_screen.hide();
     confirm_screen.hide();
@@ -219,6 +233,22 @@ void UIManager::switch_to_state(UIState new_state) {
 
         case UIState::GRIND_COMPLETE:
             grinding_screen.show();
+            break;
+
+        case UIState::RECIPE_SENDING:
+            grind_sync_screen.show();
+            break;
+
+        case UIState::RECIPE_RECEIVING:
+            grind_sync_screen.show();
+            break;
+
+        case UIState::RECIPE_TIMEOUT:
+            grind_sync_screen.show();
+            break;
+
+        case UIState::ADJUSTING_GRIND_SIZE:
+            grind_sync_screen.show();
             break;
 
         case UIState::GRIND_TIMEOUT:
@@ -291,6 +321,10 @@ void UIManager::switch_to_state(UIState new_state) {
         grinding_controller_->on_state_changed(new_state);
         grinding_controller_->update_grind_button_icon();
     }
+
+    if (grind_sync_controller_) {
+        grind_sync_controller_->on_state_changed(new_state);
+    }
 }
 
 void UIManager::show_confirmation(const char* title, const char* message, 
@@ -308,6 +342,7 @@ void UIManager::init_controllers() {
     ready_controller_ = std::make_unique<ReadyUIController>(this);
     edit_controller_ = std::make_unique<EditUIController>(this);
     grinding_controller_ = std::make_unique<GrindingUIController>(this);
+    grind_sync_controller_ = std::make_unique<GrindSyncUIController>(this);
     menu_controller_ = std::make_unique<MenuUIController>(this);
     status_indicator_controller_ = std::make_unique<StatusIndicatorController>(this);
     calibration_controller_ = std::make_unique<CalibrationUIController>(this);
@@ -329,6 +364,7 @@ void UIManager::register_controller_events() {
     if (ready_controller_) ready_controller_->register_events();
     if (edit_controller_) edit_controller_->register_events();
     if (grinding_controller_) grinding_controller_->register_events();
+    if (grind_sync_controller_) grind_sync_controller_->register_events();
     if (menu_controller_) menu_controller_->register_events();
     if (calibration_controller_) calibration_controller_->register_events();
     if (autotune_controller_) autotune_controller_->register_events();

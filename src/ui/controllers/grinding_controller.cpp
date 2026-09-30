@@ -183,11 +183,7 @@ void GrindingUIController::handle_grind_button() {
     }
 
     LOG_BLE("[%lums BUTTON_PRESS] Grind button pressed in state: %s\n",
-            millis(), ui_manager_->state_machine->is_state(UIState::READY) ? "READY" :
-                       ui_manager_->state_machine->is_state(UIState::GRINDING) ? "GRINDING" :
-                       ui_manager_->state_machine->is_state(UIState::GRIND_COMPLETE) ? "GRIND_COMPLETE" :
-                       ui_manager_->state_machine->is_state(UIState::GRIND_TIMEOUT) ? "GRIND_TIMEOUT" :
-                       ui_manager_->state_machine->is_state(UIState::PURGE_CONFIRM) ? "PURGE_CONFIRM" : "OTHER");
+            millis(), ui_manager_->state_machine->get_state_name(ui_manager_->state_machine->get_current_state()));
 
     if (ui_manager_->state_machine->is_state(UIState::PURGE_CONFIRM)) {
         // Cancel grind during purge confirmation
@@ -213,7 +209,9 @@ void GrindingUIController::handle_grind_button() {
             float target_weight = ui_manager_->profile_controller->get_current_weight();
             float target_time_seconds = ui_manager_->profile_controller->get_current_time();
             uint32_t target_time_ms = static_cast<uint32_t>((target_time_seconds * 1000.0f) + 0.5f);
-            ui_manager_->grind_controller->start_grind(target_weight, target_time_ms, ui_manager_->current_mode);
+            //ui_manager_->grind_controller->start_grind(target_weight, target_time_ms, ui_manager_->current_mode);
+            ui_manager_->switch_to_state(UIState::RECIPE_SENDING);
+            // #TODO: nur zum TESTEN
         }
         LOG_BLE("[%lums GRIND_START] start_grind() returned\n", millis());
     } else if (ui_manager_->state_machine->is_state(UIState::GRINDING)) {
@@ -225,6 +223,13 @@ void GrindingUIController::handle_grind_button() {
         if (ui_manager_->grind_controller) {
             ui_manager_->grind_controller->return_to_idle();
         }
+    } else if (ui_manager_->state_machine->is_state(UIState::RECIPE_SENDING)   ||
+               ui_manager_->state_machine->is_state(UIState::RECIPE_RECEIVING) ||
+               ui_manager_->state_machine->is_state(UIState::RECIPE_TIMEOUT)   ||
+               ui_manager_->state_machine->is_state(UIState::ADJUSTING_GRIND_SIZE)) {
+      // #TODO: No clean architecture: Recipe states are handled in GrindUIController,
+      // instead of RecipeUIController. But the button allready handles the menu too. Should be fine for now.
+      ui_manager_->switch_to_state(UIState::READY);
     }
 }
 
@@ -316,6 +321,13 @@ void GrindingUIController::update_grind_button_icon() {
     } else if (ui_manager_->state_machine->is_state(UIState::READY) && ui_manager_->current_tab == 3) {
         lv_img_set_src(grind_icon_, LV_SYMBOL_SETTINGS);
         lv_obj_set_style_bg_color(grind_button_, lv_color_hex(THEME_COLOR_NEUTRAL), 0);
+    } else if (ui_manager_->state_machine->is_state(UIState::RECIPE_SENDING) ||
+               ui_manager_->state_machine->is_state(UIState::RECIPE_RECEIVING) ||
+               ui_manager_->state_machine->is_state(UIState::RECIPE_TIMEOUT)||
+               ui_manager_->state_machine->is_state(UIState::ADJUSTING_GRIND_SIZE)) {
+        // During recipe sending, reciving and grind size adjustment show STOP icon (user can cancel the operation)
+        lv_img_set_src(grind_icon_, LV_SYMBOL_STOP);
+        lv_obj_set_style_bg_color(grind_button_, lv_color_hex(THEME_COLOR_ERROR), 0);
     } else {
         lv_img_set_src(grind_icon_, LV_SYMBOL_PLAY);
         lv_obj_set_style_bg_color(grind_button_,
@@ -338,6 +350,7 @@ void GrindingUIController::update_button_layout() {
 
     bool should_show_pulse = (ui_manager_->state_machine->is_state(UIState::GRIND_COMPLETE) &&
                               ui_manager_->current_mode == GrindMode::TIME);
+    bool in_adjust_grind_size = ui_manager_->state_machine->is_state(UIState::ADJUSTING_GRIND_SIZE);
 
     if (in_purge_confirm || should_show_pulse) {
         // Dual button layout: left button at -60, right button at +60
@@ -366,7 +379,13 @@ void GrindingUIController::update_button_layout() {
                 lv_obj_set_style_bg_opa(pulse_button_, LV_OPA_50, LV_STATE_DISABLED);
             }
         }
-    } else {
+    } else if (in_adjust_grind_size)
+    {
+      // Single button: left button at -60, right button rendered by GrindSyncScreen
+      lv_obj_align(grind_button_, LV_ALIGN_BOTTOM_MID, -60, -10);
+    } 
+    
+    else {
         // Single button layout: centered at 0
         lv_obj_align(grind_button_, LV_ALIGN_BOTTOM_MID, 0, -10);
         if (pulse_button_) {

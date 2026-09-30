@@ -6,6 +6,7 @@
 #include "system/statistics_manager.h"
 #include "controllers/profile_controller.h"
 #include "controllers/grind_controller.h"
+#include "controllers/recipe_controller.h"
 #include "ui/ui_manager.h"
 #include "config/constants.h"
 #include "bluetooth/manager.h"
@@ -18,6 +19,7 @@ HardwareManager hardware_manager;
 StateMachine state_machine;
 ProfileController profile_controller;
 GrindController grind_controller;
+RecipeController recipe_controller;
 UIManager ui_manager;
 BluetoothManager g_bluetooth_manager;
 BluetoothManager& bluetooth_manager = g_bluetooth_manager;
@@ -70,12 +72,14 @@ void setup() {
     profile_controller.init(hardware_manager.get_preferences());
     statistics_manager.init(hardware_manager.get_preferences());
     grind_controller.init(hardware_manager.get_load_cell(), hardware_manager.get_grinder(), hardware_manager.get_preferences());
-    
+    recipe_controller.init(hardware_manager.get_preferences());
+
     // Set up the reference so HardwareManager can query GrindController state
     hardware_manager.set_grind_controller(&grind_controller);
-    
+    hardware_manager.set_recipe_controller(&recipe_controller);
+
     bluetooth_manager.init(hardware_manager.get_preferences());
-    
+
     // Check for OTA failure to determine initial state
     String failed_ota_build = bluetooth_manager.check_ota_failure_after_boot();
     bool ota_failed = !failed_ota_build.isEmpty();
@@ -111,7 +115,8 @@ void setup() {
     
     // Enable BLE by default during bootup with 2-minute timeout
     // (Previously disabled by default for security, now enabled for user convenience)
-    bluetooth_manager.enable_during_bootup();
+    printf("free heap before BLE enable: %u\n", (unsigned)xPortGetFreeHeapSize());
+    //bluetooth_manager.enable_during_bootup();
     
     // Initialize individual task modules BEFORE TaskManager creates FreeRTOS tasks
     // This ensures all task dependencies are ready before tasks start running

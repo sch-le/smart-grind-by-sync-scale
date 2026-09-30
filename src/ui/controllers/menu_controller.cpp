@@ -19,6 +19,7 @@
 #include "../ui_helpers.h"
 #include "../ui_manager.h"
 #include "../screens/menu_screen.h"
+#include "../../config/constants.h"
 
 MenuUIController::MenuUIController(UIManager* manager)
     : ui_manager_(manager) {}
@@ -45,6 +46,11 @@ void MenuUIController::register_events() {
     EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_RESET, [this](lv_event_t*) { handle_grind_size_reset(); });
     EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_SAVE, [this](lv_event_t*) { handle_grind_size_save(); });
     EventBridgeLVGL::register_handler(ET::MENU_GRIND_SIZE_REFRESH, [this](lv_event_t*) { handle_grind_size_refresh(); });
+    EventBridgeLVGL::register_handler(ET::MENU_RECIPE_TIME_INCREASE, [this](lv_event_t*) { handle_recipe_time_increase(); });
+    EventBridgeLVGL::register_handler(ET::MENU_RECIPE_TIME_DECREASE, [this](lv_event_t*) { handle_recipe_time_decrease(); });
+    EventBridgeLVGL::register_handler(ET::MENU_RECIPE_WEIGHT_INCREASE, [this](lv_event_t*) { handle_recipe_weight_increase(); });
+    EventBridgeLVGL::register_handler(ET::MENU_RECIPE_WEIGHT_DECREASE, [this](lv_event_t*) { handle_recipe_weight_decrease(); }); 
+    EventBridgeLVGL::register_handler(ET::MENU_RECIPE_SAVE, [this](lv_event_t*) { handle_recipe_save(); });
 
     EventBridgeLVGL::register_handler(ET::BLE_TOGGLE, [this](lv_event_t*) { handle_ble_toggle(); });
     EventBridgeLVGL::register_handler(ET::BLE_STARTUP_TOGGLE, [this](lv_event_t*) { handle_ble_startup_toggle(); });
@@ -811,4 +817,85 @@ void MenuUIController::handle_grind_size_refresh() {
 
   auto* stepper = ui_manager_->get_hardware_manager()->get_stepper();
   ui_manager_->menu_screen.update_grind_size_label(stepper->get_rotation());
+}
+
+void MenuUIController::handle_recipe_time_increase() {
+  if (!ui_manager_) { return; }
+
+  RecipeController* recipe_controller = ui_manager_->get_hardware_manager()->get_recipe_controller();
+  uint32_t current_time_ms = recipe_controller->get_target_time_ms();
+
+  // Limit extraction time
+  if ((current_time_ms + RECIPE_TIME_STEP_MS) > RECIPE_MAX_TIME_MS) { return; }
+
+  // Update extraction time in the controller
+  recipe_controller->set_target_time_ms(current_time_ms + RECIPE_TIME_STEP_MS);
+
+  // Display updated time in the UI
+  ui_manager_->menu_screen.update_recipe_time_label((float)recipe_controller->get_target_time_ms() / 1000.0f);
+
+  LOG_BLE("Recipe time increased: %lu ms.\n", recipe_controller->get_target_time_ms());
+}
+
+void MenuUIController::handle_recipe_time_decrease() {
+  if (!ui_manager_) { return; }
+
+  RecipeController* recipe_controller = ui_manager_->get_hardware_manager()->get_recipe_controller();
+  uint32_t current_time_ms = recipe_controller->get_target_time_ms();
+
+  // Limit extraction time
+  if ((current_time_ms - RECIPE_TIME_STEP_MS) < RECIPE_MIN_TIME_MS) { return; }
+
+  // Update extraction time in the controller
+  recipe_controller->set_target_time_ms(current_time_ms - RECIPE_TIME_STEP_MS);
+
+  // Display updated time in the UI
+  ui_manager_->menu_screen.update_recipe_time_label((float)recipe_controller->get_target_time_ms() / 1000.0f);
+
+  LOG_BLE("Recipe time decreased: %u ms.\n", recipe_controller->get_target_time_ms());
+}
+
+void MenuUIController::handle_recipe_weight_increase() {
+  if (!ui_manager_) { return; }
+
+  RecipeController* recipe_controller = ui_manager_->get_hardware_manager()->get_recipe_controller();
+  uint32_t current_weight_mg = recipe_controller->get_target_weight_mg();
+
+  // Limit extraction weight
+  if ((current_weight_mg + RECIPE_WEIGHT_STEP_MG) > RECIPE_MAX_WEIGHT_MG) { return; }
+
+  // Update extraction weight in the controller
+  recipe_controller->set_target_weight_mg(current_weight_mg + RECIPE_WEIGHT_STEP_MG);
+
+  // Display updated weight in the UI
+  ui_manager_->menu_screen.update_recipe_weight_label((float)recipe_controller->get_target_weight_mg() / 1000.0f);
+
+  LOG_BLE("Recipe weight increased: %u mg.\n", recipe_controller->get_target_weight_mg());
+}
+
+void MenuUIController::handle_recipe_weight_decrease() {
+  if (!ui_manager_) { return; }
+
+  RecipeController* recipe_controller = ui_manager_->get_hardware_manager()->get_recipe_controller();
+  uint32_t current_weight_mg = recipe_controller->get_target_weight_mg();
+
+  // Limit extraction weight
+  if ((current_weight_mg - RECIPE_WEIGHT_STEP_MG) < RECIPE_MIN_WEIGHT_MG) { return; }
+
+  // Update extraction weight in the controller
+  recipe_controller->set_target_weight_mg(current_weight_mg - RECIPE_WEIGHT_STEP_MG);
+
+  // Display updated weight in the UI
+  ui_manager_->menu_screen.update_recipe_weight_label((float)recipe_controller->get_target_weight_mg() / 1000.0f);
+
+  LOG_BLE("Recipe weight decreased: %lu mg.\n", recipe_controller->get_target_weight_mg());
+}
+
+void MenuUIController::handle_recipe_save() {
+  if (!ui_manager_) { return; }
+
+  RecipeController* recipe_controller = ui_manager_->get_hardware_manager()->get_recipe_controller();
+  recipe_controller->save_target_recipe();
+
+  LOG_BLE("Recipe settings saved. Weight: %lu mg, Time: %lu ms\n", recipe_controller->get_target_weight_mg(), recipe_controller->get_target_time_ms());
 }
