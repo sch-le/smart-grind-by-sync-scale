@@ -124,7 +124,7 @@ void drv8825_driver::stop_step(void)
 int32_t drv8825_driver::get_steps() {
   if (start_time_us != 0)
   {
-    // steps is currently running, calculate the elapsed steps since start
+    // stepper is currently running, calculate the elapsed steps since start
     uint32_t new_start_time_us = micros();
     uint32_t elapsed_steps = (uint64_t)(new_start_time_us - start_time_us) * PWM_FREQ / 1000000u;
     start_time_us = new_start_time_us;
