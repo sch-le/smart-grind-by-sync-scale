@@ -13,7 +13,7 @@ private:
     DisplayManager display_manager;
     WeightSensor weight_sensor;
     Grinder grinder;
-    drv8825_driver stepper;
+    tmc2208_driver stepper;
     Preferences preferences;
     AutoTuneController autotune_controller;
     bool initialized;
