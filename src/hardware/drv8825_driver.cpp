@@ -34,6 +34,18 @@ bool drv8825_driver::init() {
   return false;
 }
 
+void drv8825_driver::enable() {
+  drv8825_stepper.enable();
+}
+
+void drv8825_driver::disable() {
+  drv8825_stepper.disable();
+}
+
+bool drv8825_driver::is_enabled() {
+  return drv8825_stepper.isEnabled();
+}
+
 void drv8825_driver::step(uint16_t steps, step_direction direction) {
   this->direction = direction;
   
@@ -62,62 +74,6 @@ void drv8825_driver::step(uint16_t steps, step_direction direction) {
     drv8825_stepper.step();
   }
   
-  drv8825_stepper.disable();
-}
-
-void drv8825_driver::start_step(step_direction direction)
-{
- if (drv8825_stepper.isEnabled()) { return; }
-
- this->direction = direction;
- 
- drv8825_stepper.enable();
- switch (direction) {
-    case STEP_DIRECTION_CW:
-    {
-      drv8825_stepper.setDirection(DRV8825_CLOCK_WISE);
-      break;
-    }
-    case STEP_DIRECTION_CCW:
-    {
-      drv8825_stepper.setDirection(DRV8825_COUNTERCLOCK_WISE);
-      break;
-    }
-    default:
-    { break; }
-  }
-  
-  start_time_us = micros();
-
-  analogWriteFrequency(step_pin, PWM_FREQ);
-  analogWrite(step_pin, 127u);
-}
-
-void drv8825_driver::stop_step(void)
-{
-  analogWrite(step_pin, 0u);
-
-  if (start_time_us != 0u)
-  {
-    uint32_t elapsed_steps = (uint64_t)(micros()  - start_time_us) * PWM_FREQ / 1000000u;
-    start_time_us = 0u;
-    
-    switch (direction) {
-      case STEP_DIRECTION_CW:
-      {
-        this->steps -= elapsed_steps;
-        break;
-      }
-      case STEP_DIRECTION_CCW:
-      {
-        this->steps += elapsed_steps;
-        break;
-      }
-      default:
-      { break; }
-    }
-  }
-
   drv8825_stepper.disable();
 }
 

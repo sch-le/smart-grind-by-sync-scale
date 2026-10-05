@@ -31,7 +31,7 @@
 
 // Motor Control
 #define HW_MOTOR_RELAY_PIN 18                                                  // GPIO pin for grinder motor control relay
-#define HW_GRINDER_SETTLING_TIME_MS 500                                        // Startup transient immunity (tune based on mechanical rigidity, 0 to disable)
+#define HW_GRINDER_SETTLING_TIME_MS 400                                        // Startup transient immunity (tune based on mechanical rigidity, 0 to disable)
 
 // Stepper Motor Control (DRV8825)
 #define HW_STEPPER_STEP_PIN 6                                                   // Stepper driver STEP pin

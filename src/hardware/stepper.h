@@ -21,13 +21,15 @@ public:
 
     virtual bool init() = 0;
 
+    virtual void enable() = 0;
+
+    virtual void disable() = 0;
+
+    virtual bool is_enabled() = 0;
+
     virtual void step(uint16_t steps, step_direction direction) = 0;
 
     virtual int32_t get_steps() = 0;
-
-    virtual void start_step(step_direction direction);
-
-    virtual void stop_step();    
 
     virtual void save_steps() = 0;
 

@@ -106,3 +106,4 @@ enum class GrinderPurgeMode {
 #define GRIND_AUTOTUNE_COLLECTION_DELAY_MS 1500                                   // Minimum wait after pulse for grounds to drop
 #define GRIND_AUTOTUNE_SETTLING_TIMEOUT_MS 5000                                   // Max wait per pulse for scale settling
 #define GRIND_AUTOTUNE_WEIGHT_THRESHOLD_G GRIND_SCALE_SETTLING_TOLERANCE_G        // 0.010g detection threshold
+#define GRIND_STEPPER_ENABLE_TIME_MS 500                                          // Time to wait between enabling the stepper and issuing the first step

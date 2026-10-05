@@ -1,8 +1,10 @@
 #include "tmc2208_driver.h"
 
 #include <Arduino.h>
+#include "../config/logging.h"
+#include "../config/constants.h"
 
-#define MICROSTEP 1u
+#define MICROSTEP 8u
 #define PWM_FREQ 800u
 
 bool tmc2208_driver::init(Preferences* preferences, uint8_t step_pin, uint8_t dir_pin, uint8_t enable_pin, uint16_t steps_per_rotation, uint16_t step_pulse_length_us) {
@@ -30,31 +32,52 @@ bool tmc2208_driver::init() {
   return false;
 }
 
+void tmc2208_driver::enable() {
+  digitalWrite(enable_pin, LOW);
+}
+
+void tmc2208_driver::disable() {
+  digitalWrite(enable_pin, HIGH);
+}
+
+bool tmc2208_driver::is_enabled() {
+  return digitalRead(enable_pin) == LOW;
+}
+
 void tmc2208_driver::step(uint16_t steps, step_direction direction)
 {
   this->direction = direction;
   int8_t dir = 0;
+  
+  LOG_BLE("Stepping %u steps in direction %d\n", steps, direction);
 
-  // enable stepper
-  digitalWrite(enable_pin, LOW);
+  if (is_enabled() == false) {
+    delay(GRIND_STEPPER_ENABLE_TIME_MS);
+    digitalWrite(enable_pin, LOW);
+  }
 
   switch (direction) {
     case STEP_DIRECTION_CW:
     {
-      digitalWrite(dir_pin, LOW);
+      digitalWrite(dir_pin, HIGH);
       dir = -1;
       break;
     }
     case STEP_DIRECTION_CCW:
     {
-      digitalWrite(dir_pin, HIGH);
+      digitalWrite(dir_pin, LOW);
       dir = 1;
       break;
     }
     default:
     { return; }
   }
-
+  
+  // disable interrupts to ensure precice timing for step pulses
+  noInterrupts();
+  
+  pinMode(step_pin, OUTPUT); /* #TODO */
+  
   for (uint16_t u = 0; u < steps; u++)
   {
     digitalWrite(step_pin, HIGH);
@@ -63,65 +86,9 @@ void tmc2208_driver::step(uint16_t steps, step_direction direction)
     delayMicroseconds(step_pulse_length_us);
     this->steps += dir;
   }
-}
 
-void tmc2208_driver::start_step(step_direction direction)
-{
-  if (start_time_us != 0) { return; } // already running
-
-  this->direction = direction;
-
-  // enable stepper
-  digitalWrite(enable_pin, LOW);
-
-  switch (direction) {
-    case STEP_DIRECTION_CW:
-    {
-      digitalWrite(dir_pin, LOW);
-      break;
-    }
-    case STEP_DIRECTION_CCW:
-    {
-      digitalWrite(dir_pin, HIGH);
-      break;
-    }
-    default:
-    { return; }
-  }
-
-  start_time_us = micros();
-
-  analogWriteFrequency(step_pin, PWM_FREQ);
-  analogWrite(step_pin, 127u);
-}
-
-void tmc2208_driver::stop_step()
-{
-  analogWrite(step_pin, 0u);
-
-  if (start_time_us != 0u)
-  {
-    uint32_t elapsed_steps = (uint64_t)(micros() - start_time_us) * PWM_FREQ / 1000000u;
-    start_time_us = 0u;
-
-    switch (direction) {
-      case STEP_DIRECTION_CW:
-      {
-        this->steps -= elapsed_steps;
-        break;
-      }
-      case STEP_DIRECTION_CCW:
-      {
-        this->steps += elapsed_steps;
-        break;
-      }
-      default:
-      { break; }
-    }
-  }
-
-  // disable stepper
-  digitalWrite(enable_pin, HIGH);
+  // re-enable interrupts after precise timing for step pulses
+  interrupts();
 }
 
 int32_t tmc2208_driver::get_steps() {
@@ -163,5 +130,5 @@ void tmc2208_driver::reset_steps() {
 }
 
 float tmc2208_driver::get_rotation() {
-  return (float)(this->steps) / (float)(this->steps_per_rotation);
+  return (((float)this->steps * 360.0) / (float)(this->steps_per_rotation));
 }

@@ -702,8 +702,8 @@ static void adjust_grind_size(UIManager* ui_manager, uint16_t steps, step_direct
     auto* stepper = ui_manager->get_hardware_manager()->get_stepper();
     if (!stepper) { return; }
     
-    //stepper->step(steps, direction);
-    stepper->start_step(direction);
+    stepper->step(steps, direction);
+    //stepper->start_step(direction);
 
     ui_manager->menu_screen.update_grind_size_label(stepper->get_rotation());
 }
@@ -712,25 +712,29 @@ void MenuUIController::handle_grind_size_increase() {
   if (!ui_manager_) { return; }
 
   // If the last grind size adjustment was less than 5s ago, ignore this event
+  /*
   if ((this->grind_size_cooldown != 0) && (millis() - this->grind_size_cooldown < 2500u))
   { return; }
 
   this->grind_size_cooldown = 0u;
+  */
 
   grind_size_start_grinder();
-  adjust_grind_size(ui_manager_, 32, step_direction::STEP_DIRECTION_CW);
+  adjust_grind_size(ui_manager_, 23, step_direction::STEP_DIRECTION_CW);
 }
 
 void MenuUIController::handle_grind_size_decrease() {
   if (!ui_manager_) { return; }
-
+  
+  /*
   if ((this->grind_size_cooldown != 0) && (millis() - this->grind_size_cooldown < 2500u))
   { return; }
 
   this->grind_size_cooldown = 0u;
+  */
 
   grind_size_start_grinder();
-  adjust_grind_size(ui_manager_, 32, step_direction::STEP_DIRECTION_CCW);
+  adjust_grind_size(ui_manager_, 23, step_direction::STEP_DIRECTION_CCW);
 }
 
 void MenuUIController::grind_size_start_grinder() {
@@ -750,17 +754,19 @@ void MenuUIController::grind_size_start_grinder() {
 void MenuUIController::grind_size_stop_motor() {
   if (!ui_manager_) { return; }
   
+  grind_size_motor_timer_cb();
+
   // Start or reset timer to stop grinder
-  if (grind_size_motor_timer_) {
+  /*if (grind_size_motor_timer_) {
     lv_timer_reset(grind_size_motor_timer_);
   }
   else {
     grind_size_motor_timer_ = lv_timer_create(static_grind_size_motor_timer_cb, 500, this);
-  }
+  }*/
 }
 
 void MenuUIController::grind_size_motor_timer_cb() {
-   auto* grinder = ui_manager_->get_hardware_manager()->get_grinder(); 
+  auto* grinder = ui_manager_->get_hardware_manager()->get_grinder(); 
   grinder->stop();
 
   if (grind_size_motor_timer_) {
@@ -783,8 +789,10 @@ void MenuUIController::static_grind_size_motor_timer_cb(lv_timer_t* timer) {
 void MenuUIController::handle_grind_size_save() {
   if (!ui_manager_) { return; }
   
+  /* #TODO */
+
   auto* stepper = ui_manager_->get_hardware_manager()->get_stepper();
-  stepper->stop_step();
+  //stepper->stop_step();
   stepper->save_steps();
 
   grind_size_stop_motor();
