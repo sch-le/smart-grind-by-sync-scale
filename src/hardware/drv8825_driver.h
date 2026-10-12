@@ -31,11 +31,13 @@ class drv8825_driver : public StepperDriver {
     
     bool init() override;
 
+    void enable() override;
+
+    void disable() override;
+
+    bool is_enabled() override;
+
     void step(uint16_t steps, step_direction direction) override;
-
-    void start_step(step_direction direction) override;
-
-    void stop_step() override;
     
     int32_t get_steps() override;
     
