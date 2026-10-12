@@ -5,7 +5,6 @@
 #include "../config/constants.h"
 
 #define MICROSTEP 8u
-#define PWM_FREQ 800u
 
 bool tmc2208_driver::init(Preferences* preferences, uint8_t step_pin, uint8_t dir_pin, uint8_t enable_pin, uint16_t steps_per_rotation, uint16_t step_pulse_length_us) {
   this->prefs = preferences;
@@ -22,7 +21,6 @@ bool tmc2208_driver::init(Preferences* preferences, uint8_t step_pin, uint8_t di
   pinMode(dir_pin, OUTPUT);
   pinMode(enable_pin, OUTPUT);
 
-  // Disable stepper to prevent hold current
   digitalWrite(enable_pin, HIGH);
 
   return true;
@@ -52,8 +50,8 @@ void tmc2208_driver::step(uint16_t steps, step_direction direction)
   LOG_BLE("Stepping %u steps in direction %d\n", steps, direction);
 
   if (is_enabled() == false) {
-    delay(GRIND_STEPPER_ENABLE_TIME_MS);
     digitalWrite(enable_pin, LOW);
+    delayMicroseconds(GRIND_STEPPER_ENABLE_TIME_US);
   }
 
   switch (direction) {
@@ -89,32 +87,14 @@ void tmc2208_driver::step(uint16_t steps, step_direction direction)
 
   // re-enable interrupts after precise timing for step pulses
   interrupts();
+
+  /*if (is_enabled() == true) {
+    delayMicroseconds(GRIND_STEPPER_ENABLE_TIME_US);
+    digitalWrite(enable_pin, HIGH);
+  }*/
 }
 
 int32_t tmc2208_driver::get_steps() {
-  if (start_time_us != 0)
-  {
-    // stepper is currently running, calculate the elapsed steps since start
-    uint32_t new_start_time_us = micros();
-    uint32_t elapsed_steps = (uint64_t)(new_start_time_us - start_time_us) * PWM_FREQ / 1000000u;
-    start_time_us = new_start_time_us;
-
-    switch (direction) {
-      case STEP_DIRECTION_CW:
-      {
-        this->steps -= elapsed_steps;
-        break;
-      }
-      case STEP_DIRECTION_CCW:
-      {
-        this->steps += elapsed_steps;
-        break;
-      }
-      default:
-      { break; }
-    }
-  }
-
   return this->steps;
 }
 

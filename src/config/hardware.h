@@ -40,7 +40,7 @@
 #define HW_STEPPER_RESET_PIN 8                                                  // Stepper driver RESET pin
 #define HW_STEPPER_SLEEP_PIN 7                                                  // Stepper driver SLEEP pin
 #define HW_STEPPER_STEPS_PER_ROTATION 1036                                      // Steps per rotation for the stepper motor
-#define HW_STEPPER_PULSE_LENGTH_US 625                                          // Step pulse length in microseconds
+#define HW_STEPPER_PULSE_LENGTH_US 2500                                          // Step pulse length in microseconds
 
 //------------------------------------------------------------------------------
 // LOAD CELL ADC SPECIFICATIONS

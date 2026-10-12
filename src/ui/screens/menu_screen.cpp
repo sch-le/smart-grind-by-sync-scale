@@ -521,7 +521,7 @@ void MenuScreen::create_grind_size_page(lv_obj_t *parent)
   grind_size_label = lv_label_create(parent);
   lv_label_set_text(grind_size_label, "0 °");
   lv_obj_set_size(grind_size_label, LV_PCT(100), LV_SIZE_CONTENT);
-  lv_obj_set_style_text_font(grind_size_label, &lv_font_montserrat_56, 0);
+  lv_obj_set_style_text_font(grind_size_label, &lv_font_montserrat_48, 0);
   lv_obj_set_style_text_color(grind_size_label, lv_color_hex(THEME_COLOR_TEXT_PRIMARY), 0);
   lv_obj_set_style_text_align(grind_size_label, LV_TEXT_ALIGN_CENTER, 0);
 
